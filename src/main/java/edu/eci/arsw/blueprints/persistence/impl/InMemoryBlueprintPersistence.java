@@ -29,11 +29,20 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
     private final Map<Tuple<String,String>,Blueprint> blueprints=new HashMap<>();
 
     public InMemoryBlueprintPersistence() {
-        //load stub data
         Point[] pts=new Point[]{new Point(140, 140),new Point(115, 115)};
         Blueprint bp=new Blueprint("_authorname_", "_bpname_ ",pts);
         blueprints.put(new Tuple<>(bp.getAuthor(),bp.getName()), bp);
-        
+
+        Point[] pts2=new Point[]{new Point(10, 20),new Point(30, 40)};
+        Blueprint bp2=new Blueprint("Natalia", "NataliaBlueprint",pts2);
+        blueprints.put(new Tuple<>(bp2.getAuthor(),bp2.getName()), bp2);
+        Point[] pts3=new Point[]{new Point(10, 10),new Point(20, 20)};
+        Blueprint bp3=new Blueprint("Natalia", "NataliaBlueprint2",pts3);
+        blueprints.put(new Tuple<>(bp3.getAuthor(),bp3.getName()), bp3);
+
+        Point[] pts4=new Point[]{new Point(50, 50),new Point(60, 60)};
+        Blueprint bp4=new Blueprint("Jesus", "JesusBlueprint",pts4);
+        blueprints.put(new Tuple<>(bp4.getAuthor(),bp4.getName()), bp4);
     }    
     
     @Override
@@ -73,6 +82,5 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
             throw new BlueprintNotFoundException("No blueprints found for author: " + author);
         }
         return res;
-    }
-    
+    }    
 }

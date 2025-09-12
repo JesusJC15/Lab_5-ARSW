@@ -81,11 +81,8 @@ public class Blueprint {
             if (this.points.get(i)!=other.points.get(i)){
                 return false;
             }
-        }
-        
+        }   
         return true;
     }
-    
-    
     
 }

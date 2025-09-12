@@ -5,6 +5,9 @@ import edu.eci.arsw.blueprints.model.Point;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class RedundancyBlueprintFilter implements BlueprintFilter {
     @Override
     public Blueprint filter(Blueprint bp) {
