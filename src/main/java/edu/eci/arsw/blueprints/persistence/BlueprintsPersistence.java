@@ -23,6 +23,14 @@ public interface BlueprintsPersistence {
     public void saveBlueprint(Blueprint bp) throws BlueprintPersistenceException;
 
     /** 
+     * @param author blueprint's author
+     * @param bpname blueprint's name
+     * @param updatedBlueprint the updated blueprint
+     * @throws BlueprintNotFoundException if there is no such blueprint
+     */
+    public void updateBlueprint(String author, String bpname, Blueprint updatedBlueprint) throws BlueprintNotFoundException;
+
+    /** 
      * @return all the blueprints in the persistence system
      */
     public Set<Blueprint> getAllBlueprints();

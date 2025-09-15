@@ -37,6 +37,14 @@ public class BlueprintsServices {
         }
     }
 
+    public void updateBlueprint(String author, String bpname, Blueprint updatedBlueprint) {
+        try {
+            bpp.updateBlueprint(author, bpname, updatedBlueprint);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public Set<Blueprint> getAllBlueprints() {
         Set<Blueprint> all = bpp.getAllBlueprints();
         if (blueprintFilter == null) return all;
@@ -72,4 +80,5 @@ public class BlueprintsServices {
         }
         return filtered;
     }
+    
 }

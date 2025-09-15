@@ -7,8 +7,8 @@ package edu.eci.arsw.blueprints.persistence.impl;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.stereotype.Repository;
 
@@ -53,6 +53,15 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
         else{
             blueprints.put(new Tuple<>(bp.getAuthor(),bp.getName()), bp);
         }        
+    }
+
+    @Override
+    public void updateBlueprint(String author, String bpname, Blueprint updatedBlueprint) throws BlueprintNotFoundException {
+        Tuple<String, String> key = new Tuple<>(author, bpname);
+        if (!blueprints.containsKey(key)) {
+            throw new BlueprintNotFoundException("Blueprint not found: " + bpname);
+        }
+        blueprints.put(key, updatedBlueprint);
     }
 
     @Override

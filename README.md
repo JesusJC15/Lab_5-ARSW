@@ -21,7 +21,6 @@ Donde se definió que:
 
 Del anterior diagrama de componentes (de alto nivel), se desprendió el siguiente diseño detallado, cuando se decidió que el API estará implementado usando el esquema de inyección de dependencias de Spring (el cual requiere aplicar el principio de Inversión de Dependencias), la extensión SpringMVC para definir los servicios REST, y SpringBoot para la configurar la aplicación:
 
-
 ![](img/ClassDiagram.png)
 
 ### Parte I
@@ -106,6 +105,7 @@ Del anterior diagrama de componentes (de alto nivel), se desprendió el siguient
 	}
 	```	
 
+	![](img/lab/14.png)
 
 2.  Para probar que el recurso ‘planos’ acepta e interpreta
     correctamente las peticiones POST, use el comando curl de Unix. Este
@@ -119,15 +119,29 @@ Del anterior diagrama de componentes (de alto nivel), se desprendió el siguient
 	```	
 
 	Con lo anterior, registre un nuevo plano (para 'diseñar' un objeto jSON, puede usar [esta herramienta](http://www.jsoneditoronline.org/)):
-	
 
 	Nota: puede basarse en el formato jSON mostrado en el navegador al consultar una orden con el método GET.
+
+	![](img/lab/15.png)
+	![](img/lab/16.png)
 
 
 3. Teniendo en cuenta el autor y numbre del plano registrado, verifique que el mismo se pueda obtener mediante una petición GET al recurso '/blueprints/{author}/{bpname}' correspondiente.
 
+	![](img/lab/17.png)
+
 4. Agregue soporte al verbo PUT para los recursos de la forma '/blueprints/{author}/{bpname}', de manera que sea posible actualizar un plano determinado.
 
+	![](img/lab/18.png)
+	![](img/lab/19.png)
+	![](img/lab/20.png)
+	![](img/lab/21.png)
+
+	- Antes de:
+	![](img/lab/17.png)
+
+	- Después de:
+	![](img/lab/22.png)
 
 ### Parte III
 
@@ -137,6 +151,10 @@ El componente BlueprintsRESTAPI funcionará en un entorno concurrente. Es decir,
 * Cuales son las respectivas regiones críticas?
 
 Ajuste el código para suprimir las condiciones de carrera. Tengan en cuenta que simplemente sincronizar el acceso a las operaciones de persistencia/consulta DEGRADARÁ SIGNIFICATIVAMENTE el desempeño de API, por lo cual se deben buscar estrategias alternativas.
+
+
+- Corrección
+
 
 Escriba su análisis y la solución aplicada en el archivo ANALISIS_CONCURRENCIA.txt
 
