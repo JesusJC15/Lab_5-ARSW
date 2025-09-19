@@ -1,0 +1,88 @@
+ANÁLISIS DE CONCURRENCIA - BlueprintsRESTAPI
+
+1. Condiciones de carrera identificadas
+
+1.1. Uso de HashMap no thread-safe
+
+Problema: La clase InMemoryBlueprintPersistence utilizaba HashMap para almacenar los blueprints, 
+el cual NO es thread-safe. En un entorno concurrente, múltiples hilos pueden acceder simultáneamente 
+a esta estructura de datos causando:
+- Corrupción de datos
+- Bucles infinitos durante el rehashing
+- Pérdida de datos
+- Estados inconsistentes del mapa
+
+Región Crítica: Todas las operaciones sobre la colección 'blueprints' en InMemoryBlueprintPersistence.
+
+1.2. Condición de carrera Check-Then-Act en saveBlueprint()
+
+Problema: El método saveBlueprint() realizaba dos operaciones separadas:
+1. Verificar si existe la clave (containsKey)
+2. Insertar el blueprint (put)
+
+Entre estas dos operaciones, otro hilo podría insertar el mismo blueprint, causando que se 
+sobrescriba un blueprint existente sin lanzar la excepción esperada.
+
+Región Crítica: El bloque completo del método saveBlueprint() desde la verificación hasta la inserción.
+
+1.3. Condición de carrera Check-Then-Act en updateBlueprint()
+
+Problema: Similar al anterior, el método updateBlueprint() verificaba la existencia (containsKey) 
+y luego actualizaba (put), permitiendo que otro hilo elimine el blueprint entre ambas operaciones.
+
+Región Crítica: El bloque completo del método updateBlueprint() desde la verificación hasta la actualización.
+
+1.4. Iteración insegura en getBlueprintsByAuthor()
+
+Problema: El método iteraba sobre blueprints.keySet() y luego hacía get() para cada clave. 
+Esto puede causar:
+- ConcurrentModificationException si otro hilo modifica el mapa durante la iteración
+- Valores null si un blueprint es eliminado entre keySet() y get()
+
+Región Crítica: El bucle de iteración sobre las claves del mapa.
+
+2. Soluciones
+
+2.1. Reemplazo por ConcurrentHashMap
+
+Solución: Se cambió HashMap por ConcurrentHashMap, que es thread-safe y permite:
+- Acceso concurrente seguro para lecturas
+- Operaciones atómicas integradas
+- Mejor rendimiento que la sincronización explícita
+
+Código:
+private final ConcurrentHashMap<Tuple<String,String>,Blueprint> blueprints=new ConcurrentHashMap<>();
+
+2.2. Uso de operaciones atómicas
+
+Solución saveBlueprint(): Se utilizó putIfAbsent() que es una operación atómica que inserta 
+solo si la clave no existe:
+
+    Tuple<String, String> key = new Tuple<>(bp.getAuthor(), bp.getName());
+    Blueprint existingBlueprint = blueprints.putIfAbsent(key, bp);
+    if (existingBlueprint != null) {
+        throw new BlueprintPersistenceException("The given blueprint already exists: " + bp);
+    }
+
+Solución updateBlueprint(): Se utilizó replace() que es atómico y retorna el valor anterior 
+solo si la clave existe:
+
+    Tuple<String, String> key = new Tuple<>(author, bpname);
+    Blueprint oldBlueprint = blueprints.replace(key, updatedBlueprint);
+    if (oldBlueprint == null) {
+        throw new BlueprintNotFoundException("Blueprint not found: " + bpname);
+    }
+
+2.3. Iteración segura con entrySet()
+
+Solución: Se reemplazó la iteración sobre keySet() + get() por entrySet() con streams paralelos:
+
+    blueprints.entrySet().parallelStream()
+            .filter(entry -> entry.getKey().getElem1().equals(author))
+            .forEach(entry -> res.add(entry.getValue()));
+
+Mejoras:
+- Una sola operación de acceso por entrada
+- ConcurrentHashMap maneja la concurrencia internamente
+- Mejor rendimiento con paralelización
+- Eliminación del riesgo de ConcurrentModificationException

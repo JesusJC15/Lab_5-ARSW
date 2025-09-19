@@ -5,10 +5,9 @@
  */
 package edu.eci.arsw.blueprints.persistence.impl;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Repository;
 
@@ -26,7 +25,7 @@ import edu.eci.arsw.blueprints.persistence.BlueprintsPersistence;
 @Repository
 public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
 
-    private final Map<Tuple<String,String>,Blueprint> blueprints=new HashMap<>();
+    private final ConcurrentHashMap<Tuple<String,String>,Blueprint> blueprints=new ConcurrentHashMap<>();
 
     public InMemoryBlueprintPersistence() {
         Point[] pts=new Point[]{new Point(140, 140),new Point(115, 115)};
@@ -47,21 +46,20 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
     
     @Override
     public void saveBlueprint(Blueprint bp) throws BlueprintPersistenceException {
-        if (blueprints.containsKey(new Tuple<>(bp.getAuthor(),bp.getName()))){
-            throw new BlueprintPersistenceException("The given blueprint already exists: "+bp);
+        Tuple<String, String> key = new Tuple<>(bp.getAuthor(), bp.getName());
+        Blueprint existingBlueprint = blueprints.putIfAbsent(key, bp);
+        if (existingBlueprint != null) {
+            throw new BlueprintPersistenceException("The given blueprint already exists: " + bp);
         }
-        else{
-            blueprints.put(new Tuple<>(bp.getAuthor(),bp.getName()), bp);
-        }        
     }
 
     @Override
     public void updateBlueprint(String author, String bpname, Blueprint updatedBlueprint) throws BlueprintNotFoundException {
         Tuple<String, String> key = new Tuple<>(author, bpname);
-        if (!blueprints.containsKey(key)) {
+        Blueprint oldBlueprint = blueprints.replace(key, updatedBlueprint);
+        if (oldBlueprint == null) {
             throw new BlueprintNotFoundException("Blueprint not found: " + bpname);
         }
-        blueprints.put(key, updatedBlueprint);
     }
 
     @Override
@@ -82,11 +80,10 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
     @Override
     public Set<Blueprint> getBlueprintsByAuthor(String author) throws BlueprintNotFoundException {
         Set<Blueprint> res = new HashSet<>();
-        for (Tuple<String,String> key : blueprints.keySet()) {
-            if (key.getElem1().equals(author)) {
-                res.add(blueprints.get(key));
-            }
-        }
+        blueprints.entrySet().parallelStream()
+                .filter(entry -> entry.getKey().getElem1().equals(author))
+                .forEach(entry -> res.add(entry.getValue()));
+        
         if (res.isEmpty()) {
             throw new BlueprintNotFoundException("No blueprints found for author: " + author);
         }
